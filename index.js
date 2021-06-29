@@ -11,16 +11,9 @@ const booky = express();
 
 //configuration
 booky.use(express.json());
-console.log(process.env.MONGO_URL);
 
-mongoose
-  .connect(process.env.MONGO_URL,{
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true,
-  })
-  .then(() => console.log("Connection established !!!!"));
+
+
 
 
 
@@ -155,6 +148,51 @@ booky.put("/book/update/author/:isbn/:authorId", (req, res) => {
   return res.json({ books: database.books , authors: database.author});
 });
 
+/*
+Route         :   /book/delete
+Description   :  delete a book 
+Access        :  PUBLIC
+Parameter     :  isbn
+Methods       :  DELETE
+*/
+booky.delete("/book/delete/:isbn", (req,res) => {
+  const newBookDatabase = database.books.filter(
+    (book) => book.ISBN!==req.params.isbn);
+
+  database.books = newBookDatabase;
+
+  return res.json({ books: database.books });
+});
+
+/*
+Route         :   /book/delete/author
+Description   :  delete an author  from a book
+Access        :  PUBLIC
+Parameter     :  isbn,authorId
+Methods       :  DELETE
+*/
+booky.delete("/book/delete/author/:isbn/:authorId", (req,res) => {
+  database.books.forEach((book) => {
+    if(book.ISBN===req.params.isbn){
+      const newAuthor = book.author.filter((author) => author!==parseInt(req.params.authorId));
+      book.author = newAuthor;
+      return;
+    }  
+  });
+
+  database.author.forEach((author) => {
+    if(author.id===parseInt(req.params.authorId)){
+      const newBook = author.books.filter((book) => book!==req.params.isbn);
+      author.books = newBook;
+      return;
+    } 
+  });
+
+  return res.json({ books: database.books , authors: database.author});
+});
+
+
+
 
 //AUTHOR/////////////////////////////////////////////////////////////////
 
@@ -238,6 +276,22 @@ booky.put("/author/update/:id", (req, res) => {
     }
   });
   return res.json({ authors : database.author});
+});
+
+/*
+Route         :   /author/delete
+Description   :  delete an author 
+Access        :  PUBLIC
+Parameter     :  id
+Methods       :  DELETE
+*/
+booky.delete("/author/delete/:id", (req,res) => {
+  const newAuthorDatabase = database.author.filter(
+    (author) => author.id!==parseInt(req.params.id));
+
+  database.author = newAuthorDatabase;
+
+  return res.json({ authors: database.author });
 });
 
 
@@ -335,13 +389,13 @@ Methods       :  PUT
 booky.put("/publication/update/book/:isbn", (req,res) => {
   //update the publication database
   database.publication.forEach((pub) => {
-    if(pub.id===req.body.ID){
+    if(pub.id===req.body.pubId){
       return pub.books.push(req.params.isbn);
     }
   //
   database.books.forEach((book) => {
     if(book.ISBN===req.params.isbn){
-      return book.publication.id = req.body.ID;
+      return book.publications = req.body.pubId;
       
     }
   });  
@@ -349,6 +403,48 @@ booky.put("/publication/update/book/:isbn", (req,res) => {
   return res.json({ books: database.books , publications: database.publication});
   });
 
+});
+
+/*
+Route         :   /publication/delete
+Description   :  delete a publication 
+Access        :  PUBLIC
+Parameter     :  id
+Methods       :  DELETE
+*/
+booky.delete("/publication/delete/:id", (req,res) => {
+  const newPubDatabase = database.publication.filter(
+    (pub) => pub.id!==parseInt(req.params.id));
+
+  database.publication = newPubDatabase;
+
+  return res.json({ publications: database.publication });
+});
+
+/*
+Route         :   /publication/delete/book
+Description   :  delete a book from a publication 
+Access        :  PUBLIC
+Parameter     :  isbn,pubId
+Methods       :  DELETE
+*/
+booky.delete("/publication/delete/:isbn/:pubId", (req,res) => {
+  database.books.forEach((book) => {
+    if(book.ISBN===req.params.isbn){
+      book.publications = 0;
+      return;
+    }  
+  });
+
+  database.publication.forEach((pub) => {
+    if(pub.id===parseInt(req.params.pubId)){
+      const newBook = pub.books.filter((book) => book!==req.params.isbn);
+      pub.books = newBook;
+      return;
+    } 
+  });
+
+  return res.json({ books: database.books , publications: database.publication});
 });
 
 
