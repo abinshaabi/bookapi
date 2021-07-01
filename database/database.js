@@ -24,7 +24,7 @@ let books = [
   
 let author = [
     { id: 1, name: "Pavan", books: ["12345one","12345two"] },
-    { id: 2, name: "Elon Musk", books: [] },
+    { id: 2, name: "Elon Musk", books: ["12345one"] },
 ];
   
 let publication = [
